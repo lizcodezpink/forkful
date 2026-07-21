@@ -1,12 +1,16 @@
 import { z } from 'zod';
 
-export const slugSchema = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .min(3, 'Blog address must be at least 3 characters.')
-  .max(40, 'Blog address must be at most 40 characters.')
-  .regex(/^[a-z0-9-]+$/, 'Use only lowercase letters, numbers, and hyphens.');
+export const slugSchema = z.preprocess(
+  (value) =>
+    typeof value === 'string'
+      ? value.trim().toLowerCase().replace(/^-+|-+$/g, '')
+      : value,
+  z
+    .string()
+    .min(3, 'Blog address must be at least 3 characters.')
+    .max(40, 'Blog address must be at most 40 characters.')
+    .regex(/^[a-z0-9-]+$/, 'Use only lowercase letters, numbers, and hyphens.'),
+);
 
 export const signupSchema = z.object({
   username: z
@@ -39,12 +43,21 @@ export const blogUpdateSchema = z.object({
 });
 
 export function slugify(input: string): string {
+  return slugifyInput(input).replace(/^-|-$/g, '');
+}
+
+/**
+ * Live slug transform for typing: lowercases, converts spaces/underscores to
+ * hyphens, and drops invalid characters — but keeps a trailing hyphen so the
+ * user can type multi-word hyphenated slugs. Trailing hyphens are trimmed on
+ * submit by {@link slugSchema} (`.trim()` + the server-side normalization).
+ */
+export function slugifyInput(input: string): string {
   return input
-    .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/[^a-z0-9\s_-]/g, '')
     .replace(/[\s_]+/g, '-')
     .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
+    .replace(/^-+/, '')
     .slice(0, 40);
 }

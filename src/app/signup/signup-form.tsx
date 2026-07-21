@@ -3,7 +3,7 @@
 import { useActionState, useState } from 'react';
 import { SubmitButton } from '@/components/submit-button';
 import { TextAreaField, TextField } from '@/components/form-field';
-import { slugify } from '@/lib/validation';
+import { slugifyInput } from '@/lib/validation';
 import { signupAction, type FormState } from '../actions';
 
 const initialState: FormState = {};
@@ -11,7 +11,6 @@ const initialState: FormState = {};
 export function SignupForm() {
   const [state, formAction] = useActionState(signupAction, initialState);
   const [slug, setSlug] = useState(state.values?.blogSlug ?? '');
-  const [slugTouched, setSlugTouched] = useState(false);
 
   return (
     <form action={formAction} className="space-y-5">
@@ -75,16 +74,12 @@ export function SignupForm() {
             id="blogSlug"
             name="blogSlug"
             value={slug}
-            onChange={(e) => {
-              setSlug(slugify(e.target.value));
-              setSlugTouched(true);
-            }}
+            onChange={(e) => setSlug(slugifyInput(e.target.value))}
             placeholder="alexs-kitchen"
             required
             className="w-full bg-white px-3.5 py-2.5 text-crust-900 outline-none placeholder:text-crust-300"
           />
         </div>
-        <input type="hidden" name="_slugTouched" value={String(slugTouched)} />
         {state.fieldErrors?.blogSlug ? (
           <p className="text-xs font-medium text-red-600">{state.fieldErrors.blogSlug}</p>
         ) : (
